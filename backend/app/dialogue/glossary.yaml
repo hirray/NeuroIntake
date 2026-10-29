@@ -1,0 +1,68 @@
+# Clinical Glossary for Patient Clarifications
+# Strictly non-diagnostic explanations used by the dialogue engine and LLM clarification helper.
+
+terms:
+  photophobia:
+    en: "Sensitivity to light means bright light causes noticeable discomfort, pain, or makes you want to close your eyes or seek a dark room."
+    hi: "प्रकाश संवेदनशीलता का अर्थ है कि तेज रोशनी से आंखों में दर्द या असहजता होना, या अंधेरे कमरे में जाने का मन होना।"
+    gu: "પ્રકાશ પ્રત્યે સંવેદનશીલતા એટલે કે તેજ પ્રકાશથી આંખોમાં દુખાવો અથવા અસ્વસ્થતા થવી, અથવા અંધારાવાળા રૂમમાં જવાનું મન થવું."
+
+  phonophobia:
+    en: "Sensitivity to sound means everyday noises (talking, TV, traffic) feel uncomfortably loud or painful during your headache."
+    hi: "ध्वनि संवेदनशीलता का अर्थ है कि सिरदर्द के दौरान सामान्य आवाजें (बातचीत, टीवी आदि) बहुत तेज या असहनीय लगना।"
+    gu: "અવાજ પ્રત્યે સંવેદનશીલતા એટલે કે માથાના દુખાવા દરમિયાન સામાન્ય અવાજો (વાતચીત, ટીવી) ખૂબ જ અસહ્ય કે પીડાદાયક લાગવા."
+
+  thunderclap:
+    en: "A thunderclap headache is an explosive, extremely severe headache that reaches its worst intensity in under one minute, like a sudden lightning strike."
+    hi: "थंडरक्लैप सिरदर्द एक बहुत अचानक और तीव्र सिरदर्द है जो एक मिनट के भीतर अपने चरम दर्द तक पहुंच जाता है।"
+    gu: "થંડરક્લેપ માથાનો દુખાવો એ એક અચાનક અને અત્યંત તીવ્ર માથાનો દુખાવો છે જે 1 મિનિટની અંદર ખૂબ જ વધી જાય છે."
+
+  visual_aura:
+    en: "Visual disturbances are temporary changes in vision that start gradually and go away completely, like shimmering zigzag patterns, flashing sparks, or blurry blind spots."
+    hi: "दृश्य संबंधी लक्षण आंखों के सामने आने वाले अस्थायी बदलाव हैं जो धीरे-धीरे शुरू होकर पूरी तरह ठीक हो जाते हैं, जैसे चमकीली रेखाएं, चमकती रोशनी या धुंधले धब्बे।"
+    gu: "દ્રષ્ટિ સંબંધી ફેરફારો એ આંખો સામે આવતા કામચલાઉ ફેરફારો છે જે ધીમે ધીમે શરૂ થાય છે અને સંપૂર્ણપણે મટી જાય છે, જેમ કે ઝબૂકતી લાઈટો, ઝિગઝેગ રેખાઓ અથવા ધૂંધળા ધબ્બા."
+
+  sensory_aura:
+    en: "Sensory symptoms are temporary pins-and-needles or numbness that slowly spread across one side of the face, fingers, or arm and then fade away."
+    hi: "संवेदी लक्षण अस्थायी झुनझुनी या सुन्नता हैं जो धीरे-धीरे चेहरे, हाथ या उंगलियों पर फैलती हैं और बाद में ठीक हो जाती हैं।"
+    gu: "સંવેદી લક્ષણો એ કામચલાઉ ઝણઝણાટી અથવા સુન્નપણું છે જે ધીમે ધીમે ચહેરા કે હાથ પર ફેલાય છે અને પછીથી મટી જાય છે."
+
+  dysphasia:
+    en: "Trouble finding words means you know what you want to say, but temporarily struggle to recall words or form correct sentences."
+    hi: "शब्द ढूंढने में परेशानी का मतलब है कि आप जानते हैं क्या कहना है, लेकिन अस्थायी रूप से सही शब्द या वाक्य नहीं बोल पाते।"
+    gu: "શબ્દો શોધવામાં તકલીફ એટલે કે તમે શું કહેવા માંગો છો તે જાણો છો, પરંતુ યોગ્ય શબ્દો બોલવામાં કામચલાઉ મુશ્કેલી પડે છે."
+
+  dysarthria:
+    en: "Slurred speech means your words sound unclear or mumbled because the mouth or tongue muscles feel heavy."
+    hi: "लड़खड़ाती आवाज का अर्थ है कि मुंह या जीभ की मांसपेशियों में भारीपन के कारण शब्द अस्पष्ट या धीमे सुनाई देते हैं।"
+    gu: "સ્પષ્ટ ન બોલી શકવું એટલે કે જીભ લથડવી અથવા શબ્દો સ્પષ્ટ રીતે ન નીકળવા."
+
+  vertigo:
+    en: "Vertigo is a sensation that you or the room around you is spinning, rocking, or tilting."
+    hi: "वर्टिगो या चक्कर का मतलब है कि आपको लगे कि कमरा या आपका सिर गोल-गोल घूम रहा है।"
+    gu: "ચક્કર આવવા એટલે કે એવું લાગવું કે તમે અથવા આખી રૂમ ગોળ ગોળ ફરી રહી છે."
+
+  tinnitus:
+    en: "Tinnitus is hearing a ringing, buzzing, roaring, or hissing sound in your ears when there is no actual outside sound."
+    hi: "टिनिटस का मतलब है कानों में बिना किसी बाहरी आवाज के सीटी, भिनभिनाहट या घंटी जैसी आवाज सुनाई देना।"
+    gu: "ટિનીટસ એટલે કે બહાર કોઈ અવાજ ન હોવા છતાં કાનમાં સીટી કે ગુંજારવ જેવો અવાજ સંભળાવો."
+
+  hypoacusis:
+    en: "Hypoacusis means a temporary decrease or muffling in your hearing during the attack."
+    hi: "सिरदर्द के दौरान कुछ समय के लिए सुनने में कमी आना या आवाज धीमी लगना।"
+    gu: "હુમલા દરમિયાન કામચલાઉ ધોરણે ઓછું સંભળાવું."
+
+  diplopia:
+    en: "Double vision means seeing two images of a single object instead of one."
+    hi: "दोहरी दृष्टि का मतलब है किसी एक चीज की दो छवियां दिखाई देना।"
+    gu: "ડબલ વિઝન એટલે કે એક જ વસ્તુના બે પ્રતિબિંબ દેખાવા."
+
+  visual_defect:
+    en: "A blind spot or visual field defect is a specific patch in your field of vision where you temporarily cannot see."
+    hi: "दृष्टि में अंधा धब्बा यानी देखने के दायरे में किसी खास हिस्से का अस्थायी रूप से न दिखना।"
+    gu: "જોવામાં અંધ બિંદુ એટલે કે જોવાની ક્ષમતામાં કોઈ ચોક્કસ ભાગ કામચલાઉ ન દેખાવો."
+
+  ataxia:
+    en: "Unsteadiness or ataxia means feeling clumsy, off-balance, or stumbling while trying to walk normally."
+    hi: "असंतुलन का मतलब है चलते समय लड़खड़ाहट होना या शरीर का संतुलन बनाए रखने में कठिनाई होना।"
+    gu: "અસ્થિરતા એટલે કે ચાલતી વખતે લથડવું અથવા સંતુલન જાળવવામાં તકલીફ પડવી."
