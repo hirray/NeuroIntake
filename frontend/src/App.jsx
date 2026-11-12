@@ -9,6 +9,8 @@ export default function App() {
   const [sessionCode, setSessionCode] = useState('')
   const [language, setLanguage] = useState('en')
   const [initialBotMsg, setInitialBotMsg] = useState(null)
+  const [chatHistory, setChatHistory] = useState([])
+  const [sessionAnswers, setSessionAnswers] = useState({})
   const [showRedFlagModal, setShowRedFlagModal] = useState(false)
   const [redFlagText, setRedFlagText] = useState('')
 
@@ -26,6 +28,8 @@ export default function App() {
       const data = await res.json()
       setSessionCode(data.session_id)
       setInitialBotMsg(data.bot_message)
+      setChatHistory([])
+      setSessionAnswers({})
       setCurrentView('chat')
     } catch (err) {
       console.error('Error starting session:', err)
@@ -45,10 +49,14 @@ export default function App() {
       setSessionCode(data.session_id)
       setLanguage(data.language)
       setInitialBotMsg(data.bot_message)
+      setChatHistory(data.chat_history || [])
+      setSessionAnswers(data.answers || {})
 
       if (data.status === 'urgent_red_flag') {
         setRedFlagText(data.bot_message?.text || '')
         setShowRedFlagModal(true)
+      } else {
+        setShowRedFlagModal(false)
       }
 
       setCurrentView('chat')
@@ -89,6 +97,8 @@ export default function App() {
   const handleResetSession = () => {
     setSessionCode('')
     setInitialBotMsg(null)
+    setChatHistory([])
+    setSessionAnswers({})
     setShowRedFlagModal(false)
     setCurrentView('consent')
   }
@@ -109,15 +119,20 @@ export default function App() {
           language={language}
           onLanguageChange={handleLanguageChange}
           initialBotMessage={initialBotMsg}
+          initialChatHistory={chatHistory}
+          initialAnswers={sessionAnswers}
+          onResumeSession={handleResumeSession}
           onOpenClinician={() => setCurrentView('clinician')}
           onResetSession={handleResetSession}
         />
       )}
 
       {currentView === 'clinician' && (
-        <ClinicianPortal
-          onClose={() => setCurrentView(sessionCode ? 'chat' : 'consent')}
-        />
+        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', backgroundColor: '#f1f5f9' }}>
+          <ClinicianPortal
+            onClose={() => setCurrentView(sessionCode ? 'chat' : 'consent')}
+          />
+        </div>
       )}
 
       {showRedFlagModal && (

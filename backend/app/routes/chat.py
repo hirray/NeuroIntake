@@ -51,5 +51,6 @@ def send_message(req: SendMessageRequest, db: Session = Depends(get_db)):
         "session_id": sid,
         "status": state.status,
         "bot_message": bot_msg,
-        "data_quality": state.data_quality.model_dump()
+        "data_quality": state.data_quality.model_dump(),
+        "answers": {k: v.value for k, v in state.answers.items()}
     }

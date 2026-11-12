@@ -268,12 +268,24 @@ class DialogueEngine:
 
                 # Check if this answered question was a red flag
                 q_def = self.question_map.get(pending.question_id, {})
-                if q_def.get("is_red_flag") and pending.tentative_value == "yes":
+                is_triggered = False
+                trigger_reason = ""
+                if q_def.get("is_red_flag"):
+                    val = pending.tentative_value
+                    if isinstance(val, list):
+                        non_none = [c for c in val if str(c).lower() not in ("none", "none_of_the_above", "")]
+                        if non_none:
+                            is_triggered = True
+                            trigger_reason = RED_FLAG_DESCRIPTIONS.get(non_none[0], f"Red flag reported: {non_none[0]}")
+                    elif str(val).lower() == "yes":
+                        is_triggered = True
+                        trigger_reason = RED_FLAG_DESCRIPTIONS.get(pending.question_id, "Reported red flag symptom")
+
+                if is_triggered:
                     state.status = "urgent_red_flag"
                     state.red_flag_codes.append(pending.question_id)
-                    reason = RED_FLAG_DESCRIPTIONS.get(pending.question_id, "Reported red flag symptom")
-                    state.red_flag_reasons.append(f"[{pending.question_id}] {reason}")
-                    return self.build_red_flag_prompt(state, reason)
+                    state.red_flag_reasons.append(f"[{pending.question_id}] {trigger_reason}")
+                    return self.build_red_flag_prompt(state, trigger_reason)
 
                 # Move to next question
                 state.question_history.append(pending.question_id)
@@ -455,12 +467,24 @@ class DialogueEngine:
         )
 
         # 9. Safety Check on answered question
-        if q_def.get("is_red_flag") and parsed_val == "yes":
-            state.status = "urgent_red_flag"
-            state.red_flag_codes.append(qid)
-            reason = RED_FLAG_DESCRIPTIONS.get(qid, "Reported red flag symptom")
-            state.red_flag_reasons.append(f"[{qid}] {reason}")
-            return self.build_red_flag_prompt(state, reason)
+        if q_def.get("is_red_flag"):
+            is_triggered = False
+            trigger_reason = ""
+            if isinstance(parsed_val, list):
+                non_none = [c for c in parsed_val if str(c).lower() not in ("none", "none_of_the_above", "")]
+                if non_none:
+                    is_triggered = True
+                    trigger_reason = RED_FLAG_DESCRIPTIONS.get(non_none[0], f"Red flag reported: {non_none[0]}")
+            elif str(parsed_val).lower() == "yes":
+                is_triggered = True
+                trigger_reason = RED_FLAG_DESCRIPTIONS.get(qid, "Reported red flag symptom")
+
+            if is_triggered:
+                state.status = "urgent_red_flag"
+                state.red_flag_codes.append(qid)
+                reason = trigger_reason
+                state.red_flag_reasons.append(f"[{qid}] {reason}")
+                return self.build_red_flag_prompt(state, reason)
 
         # 10. Advance to next question
         state.question_history.append(qid)

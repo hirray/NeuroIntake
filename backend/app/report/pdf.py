@@ -371,20 +371,53 @@ def build_pdf_report(
     # 5. COMPLETE QUESTIONNAIRE TABLE
     story.append(Paragraph("3. Complete Intake Questionnaire & Patient Responses", section_heading))
     q_rows = [
-        [Paragraph("#", table_header_style), Paragraph("Question (English)", table_header_style), Paragraph("Patient Answer (Coded)", table_header_style), Paragraph("Original Transcript & Translation", table_header_style)]
+        [Paragraph("#", table_header_style), Paragraph("Question (English)", table_header_style),
+         Paragraph("Patient Answer", table_header_style), Paragraph("Original Transcript / Translation", table_header_style)]
     ]
+
+    def humanise_answer(val) -> str:
+        """Convert coded answer values to clean human-readable display strings."""
+        if val is None:
+            return "—"
+        if isinstance(val, list):
+            clean = [str(v).replace("_", " ").capitalize() for v in val if str(v).lower() not in ("none", "none_of_the_above")]
+            return ", ".join(clean) if clean else "None reported"
+        s = str(val)
+        if s.lower() in ("skipped", "unknown", "i don't know"):
+            return "Not provided"
+        return s.replace("_", " ").capitalize()
 
     for qid, q_def in question_map.items():
         ans_record = session_state.answers.get(qid)
-        ans_val = str(ans_record.value) if ans_record else "—"
-        raw_transcript = ans_record.raw_text if ans_record else "Not answered"
-        trans_line = f"<br/><i>{ans_record.english_translation}</i>" if ans_record and ans_record.english_translation else ""
+        required = q_def.get("required", True)
+
+        # Skip optional unanswered questions from the table to keep it clean
+        if ans_record is None and not required:
+            continue
+
+        raw_val = ans_record.value if ans_record else None
+        ans_display = humanise_answer(raw_val)
+
+        # Skip rows where the patient explicitly skipped an optional question
+        raw_text_val = ans_record.raw_text if ans_record else ""
+        if raw_text_val in ("[Skipped]", "") and not required:
+            continue
+
+        # Display transcript cleanly
+        if not ans_record:
+            transcript_str = "Not answered"
+        elif raw_text_val in ("[Skipped]",):
+            transcript_str = "Question not applicable / skipped"
+        else:
+            transcript_str = raw_text_val or ans_display
+
+        trans_line = f"<br/><i>EN: {ans_record.english_translation}</i>" if ans_record and ans_record.english_translation else ""
 
         q_rows.append([
             Paragraph(f"<b>{qid}</b>", body_style),
             Paragraph(q_def.get("report_label", qid), body_style),
-            Paragraph(ans_val, body_style),
-            Paragraph(f"{raw_transcript}{trans_line}", indic_body_style)
+            Paragraph(ans_display, body_style),
+            Paragraph(f"{transcript_str}{trans_line}", indic_body_style)
         ])
 
     q_table = Table(q_rows, colWidths=[25, 200, 130, 160])
@@ -398,25 +431,39 @@ def build_pdf_report(
     story.append(q_table)
     story.append(Spacer(1, 8))
 
-    # 6. CLINICAL SUMMARY & LIFESTYLE
+    # 6. CLINICAL SUMMARY & LIFESTYLE — professional phrasing
     story.append(Paragraph("4. Clinical Pattern & Lifestyle Summary", section_heading))
+
+    freq_band = clinical_summary.frequency_band if clinical_summary.frequency_band else "Not specified"
+    dur_band = clinical_summary.duration_band if clinical_summary.duration_band else "Not specified"
+    intensity_desc = clinical_summary.intensity_description if clinical_summary.intensity_description else "Not specified"
+    assoc_count = clinical_summary.associated_symptom_count
+    aura_list = clinical_summary.aura_symptoms_present
+    med_overuse = clinical_summary.medication_overuse_risk
+    triggers = clinical_summary.triggers_reported
+    ls = clinical_summary.lifestyle_summary
+
+    def ls_val(key, unit=""):
+        v = ls.get(key)
+        if v is None or str(v) in ("", "None", "0"):
+            return "Not provided"
+        return f"{v}{unit}"
+
     summary_text = [
-        f"<b>Monthly Frequency:</b> {clinical_summary.frequency_band}<br/>",
-        f"<b>Typical Duration:</b> {clinical_summary.duration_band} &nbsp;|&nbsp; <b>Typical Intensity:</b> {clinical_summary.intensity_description}<br/>",
-        f"<b>Associated Symptoms Present:</b> {clinical_summary.associated_symptom_count}/4 (Nausea, Vomiting, Light sensitivity, Sound sensitivity)<br/>",
-        f"<b>Aura Symptoms:</b> {', '.join(clinical_summary.aura_symptoms_present) if clinical_summary.aura_symptoms_present else 'None reported'}<br/>",
-        f"<b>Medication Overuse Warning:</b> {'YES (Acute medication taken >= 10 days/month)' if clinical_summary.medication_overuse_risk else 'No'}<br/>",
-        f"<b>Suspected Triggers:</b> {', '.join(clinical_summary.triggers_reported) if clinical_summary.triggers_reported else 'None specified'}<br/>",
-        f"<b>Lifestyle (Descriptive Only):</b> Sleep: {clinical_summary.lifestyle_summary['sleep_hours']}h/night, "
-        f"Stress: {clinical_summary.lifestyle_summary['stress_level_0_10']}/10, Water: {clinical_summary.lifestyle_summary['water_liters']}L, "
-        f"Caffeine: {clinical_summary.lifestyle_summary['caffeine_cups']} cups, Screen: {clinical_summary.lifestyle_summary['screen_hours']}h/day."
+        f"<b>Monthly Headache Frequency:</b> {freq_band}<br/>",
+        f"<b>Typical Attack Duration:</b> {dur_band} &nbsp;|&nbsp; <b>Pain Intensity at Peak:</b> {intensity_desc}<br/>",
+        f"<b>Associated Symptoms Reported:</b> {assoc_count} of 4 checked (Nausea, Vomiting, Photophobia, Phonophobia)<br/>",
+        f"<b>Aura / Neurological Warning Symptoms:</b> {', '.join(aura_list) if aura_list else 'None reported by patient'}<br/>",
+        f"<b>Medication Overuse Risk:</b> {'<b>YES</b> — acute medication used on ≥ 10 days/month; MOH should be considered' if med_overuse else 'No overuse pattern detected'}<br/>",
+        f"<b>Reported Attack Triggers:</b> {', '.join(triggers) if triggers else 'None identified'}<br/>",
+        f"<b>Lifestyle Factors (self-reported):</b> Sleep: {ls_val('sleep_hours', 'h/night')} | Stress: {ls_val('stress_level_0_10', '/10')} | Water: {ls_val('water_liters', ' L/day')} | Caffeine: {ls_val('caffeine_cups', ' cups/day')} | Screen time: {ls_val('screen_hours', 'h/day')}"
     ]
     summary_p = Paragraph("".join(summary_text), body_style)
     summary_table = Table([[summary_p]], colWidths=[515])
     summary_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#f8fafc")),
         ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor("#cbd5e1")),
-        ('PADDING', (0,0), (-1,-1), 6),
+        ('PADDING', (0,0), (-1,-1), 8),
     ]))
     story.append(summary_table)
     story.append(Spacer(1, 8))

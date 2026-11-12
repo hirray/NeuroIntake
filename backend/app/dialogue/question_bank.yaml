@@ -1,90 +1,53 @@
-# Fixed Human-Reviewed Question Bank for MigraineAssist Intake
-# Format:
-# id: Question ID
-# section: S (Safety), P (Profile), H (Headache), A (Aura), F (History/Meds), L (Lifestyle)
-# type: yes_no | single_choice | multi_choice | number | scale_0_10 | free_text | duration
-# report_label: Clean clinician-facing English label for PDF report
-# coding: Dataset or clinical parameter code
-# required: bool
-# is_red_flag: bool (triggers immediate safety check)
-# skip_if: condition map (optional)
-# validation: range or allowed values (optional)
-# options: list of {code, label_key}
+# Fixed Human-Reviewed Question Bank for MigraineAssist Intake (Optimised — v2)
+# Consolidation strategy:
+#   Safety: merged E1–E8 into two composite questions (E1, E2)
+#   Profile: P3/P4 (height/weight) removed as non-diagnostic; P3 = onset age, P4 = lifetime attacks
+#   Headache: H7/H8 → single nausea_vomiting question; H9/H10 → single sensory question
+#   Aura: A3–A13 collapsed into A2 (composite neurological aura); A15–A19 kept for ICHD-3 spec
+#   History/Lifestyle: merged lifestyle block (L1–L5) into one multi-part question
 
 questions:
-  # ================= SECTION S: SAFETY & RED FLAGS =================
+  # ================= SECTION E: SAFETY & RED FLAGS =================
   - id: E1
     section: S
-    type: yes_no
-    report_label: "Thunderclap onset (peaks <= 1 min)"
-    coding: Thunderclap
+    type: multi_choice
+    report_label: "Acute danger symptoms (select all that apply)"
+    coding: AcuteDangerSymptoms
     required: true
     is_red_flag: true
     translations_key: questions.E1
     glossary_ref: thunderclap
+    options:
+      - code: thunderclap
+        label_key: options.redflag_thunderclap
+      - code: worst_headache
+        label_key: options.redflag_worst
+      - code: neuro_deficit
+        label_key: options.redflag_neuro
+      - code: syncope_seizure
+        label_key: options.redflag_syncope
+      - code: none
+        label_key: options.none
 
   - id: E2
     section: S
-    type: yes_no
-    report_label: "Worst headache of life / First-ever severe"
-    coding: WorstHeadache
+    type: multi_choice
+    report_label: "Additional red-flag warning signs (select all that apply)"
+    coding: AdditionalRedFlags
     required: true
     is_red_flag: true
     translations_key: questions.E2
-
-  - id: E3
-    section: S
-    type: yes_no
-    report_label: "New weakness, numbness, speech trouble, or confusion"
-    coding: NewNeuroDeficit
-    required: true
-    is_red_flag: true
-    translations_key: questions.E3
-
-  - id: E4
-    section: S
-    type: yes_no
-    report_label: "Fainting, seizure, or sudden drop in alertness"
-    coding: SyncopeSeizure
-    required: true
-    is_red_flag: true
-    translations_key: questions.E4
-
-  - id: E5
-    section: S
-    type: yes_no
-    report_label: "Fever with stiff neck or skin rash"
-    coding: FeverMeningismus
-    required: true
-    is_red_flag: true
-    translations_key: questions.E5
-
-  - id: E6
-    section: S
-    type: yes_no
-    report_label: "Sudden vision loss or major new visual change"
-    coding: SuddenVisionLoss
-    required: true
-    is_red_flag: true
-    translations_key: questions.E6
-
-  - id: E7
-    section: S
-    type: yes_no
-    report_label: "Headache after recent head injury"
-    coding: PostTraumatic
-    required: true
-    is_red_flag: true
-    translations_key: questions.E7
-
-  - id: E8
-    section: S
-    type: yes_no
-    report_label: "Onset after age 50 or recent drastic worsening"
-    coding: LateOnsetPatternChange
-    required: true
-    is_red_flag: true
-    translations_key: questions.E8
+    options:
+      - code: fever_neck
+        label_key: options.redflag_fever
+      - code: vision_loss
+        label_key: options.redflag_vision
+      - code: post_trauma
+        label_key: options.redflag_trauma
+      - code: late_onset
+        label_key: options.redflag_lateonset
+      - code: none
+        label_key: options.none
 
   # ================= SECTION P: PATIENT PROFILE =================
   - id: P1
@@ -116,37 +79,15 @@ questions:
   - id: P3
     section: P
     type: number
-    report_label: "Height (cm)"
-    coding: Height
-    required: false
-    validation:
-      min: 50
-      max: 250
-    translations_key: questions.P3
-
-  - id: P4
-    section: P
-    type: number
-    report_label: "Weight (kg)"
-    coding: Weight
-    required: false
-    validation:
-      min: 15
-      max: 300
-    translations_key: questions.P4
-
-  - id: P5
-    section: P
-    type: number
     report_label: "Age when headaches first started"
     coding: OnsetAge
     required: true
     validation:
       min: 1
       max: 120
-    translations_key: questions.P5
+    translations_key: questions.P3
 
-  - id: P6
+  - id: P4
     section: P
     type: single_choice
     report_label: "Lifetime headache attacks count"
@@ -157,7 +98,7 @@ questions:
         label_key: options.less_than_5
       - code: five_or_more
         label_key: options.five_or_more
-    translations_key: questions.P6
+    translations_key: questions.P4
 
   # ================= SECTION H: HEADACHE CHARACTERISTICS =================
   - id: H1
@@ -249,45 +190,43 @@ questions:
     required: true
     translations_key: questions.H6
 
+  # Merged H7 (Nausea) + H8 (Vomiting) into one composite question
   - id: H7
     section: H
-    type: yes_no
-    report_label: "Nausea (feeling sick to stomach)"
-    coding: Nausea
+    type: multi_choice
+    report_label: "Nausea and / or vomiting during headache"
+    coding: NauseaVomiting
     required: true
     translations_key: questions.H7
+    options:
+      - code: nausea
+        label_key: options.symptom_nausea
+      - code: vomiting
+        label_key: options.symptom_vomiting
+      - code: none
+        label_key: options.none
 
+  # Merged H9 (Phonophobia) + H10 (Photophobia) into one composite question
   - id: H8
     section: H
-    type: yes_no
-    report_label: "Vomiting"
-    coding: Vomit
+    type: multi_choice
+    report_label: "Light / sound sensitivity during headache"
+    coding: Photophonophobia
     required: true
     translations_key: questions.H8
-
-  - id: H9
-    section: H
-    type: yes_no
-    report_label: "Sensitivity to sound (phonophobia)"
-    coding: Phonophobia
-    required: true
-    translations_key: questions.H9
-    glossary_ref: phonophobia
-
-  - id: H10
-    section: H
-    type: yes_no
-    report_label: "Sensitivity to light (photophobia)"
-    coding: Photophobia
-    required: true
-    translations_key: questions.H10
-    glossary_ref: photophobia
+    options:
+      - code: light_sensitive
+        label_key: options.symptom_light
+      - code: sound_sensitive
+        label_key: options.symptom_sound
+      - code: none
+        label_key: options.none
 
   # ================= SECTION A: AURA & NEUROLOGICAL SYMPTOMS =================
   - id: A1
     section: A
     type: multi_choice
-    report_label: "Reversible visual disturbances (types)"
+    report_label: "Reversible visual disturbances before/during headache (types)"
     coding: Visual
     required: true
     options:
@@ -304,119 +243,35 @@ questions:
     translations_key: questions.A1
     glossary_ref: visual_aura
 
+  # Merged A2 (sensory tingling/numbness) + A3–A13 into a single composite neuro-aura question
   - id: A2
     section: A
     type: multi_choice
-    report_label: "Reversible sensory symptoms (types)"
-    coding: Sensory
+    report_label: "Other neurological warning symptoms (select all that apply)"
+    coding: NeurologyAura
     required: true
+    translations_key: questions.A2
     options:
       - code: spreading_tingling
         label_key: options.sensory_tingling
       - code: spreading_numbness
         label_key: options.sensory_numbness
+      - code: word_finding
+        label_key: options.aura_dysphasia
+      - code: slurred_speech
+        label_key: options.aura_dysarthria
+      - code: vertigo
+        label_key: options.aura_vertigo
+      - code: double_vision
+        label_key: options.aura_diplopia
+      - code: unsteady_walk
+        label_key: options.aura_ataxia
+      - code: muscle_weakness_one_side
+        label_key: options.aura_motorweakness
       - code: none
         label_key: options.none
-    translations_key: questions.A2
-    glossary_ref: sensory_aura
 
   - id: A3
-    section: A
-    type: yes_no
-    report_label: "Trouble finding words / Dysphasia"
-    coding: Dysphasia
-    required: true
-    translations_key: questions.A3
-    glossary_ref: dysphasia
-
-  - id: A4
-    section: A
-    type: yes_no
-    report_label: "Slurred speech / Dysarthria"
-    coding: Dysarthria
-    required: true
-    translations_key: questions.A4
-    glossary_ref: dysarthria
-
-  - id: A5
-    section: A
-    type: yes_no
-    report_label: "Spinning sensation / Vertigo"
-    coding: Vertigo
-    required: true
-    translations_key: questions.A5
-    glossary_ref: vertigo
-
-  - id: A6
-    section: A
-    type: yes_no
-    report_label: "Ringing in ears / Tinnitus"
-    coding: Tinnitus
-    required: true
-    translations_key: questions.A6
-    glossary_ref: tinnitus
-
-  - id: A7
-    section: A
-    type: yes_no
-    report_label: "Hearing drop / Hypoacusis"
-    coding: Hypoacusis
-    required: true
-    translations_key: questions.A7
-    glossary_ref: hypoacusis
-
-  - id: A8
-    section: A
-    type: yes_no
-    report_label: "Double vision / Diplopia"
-    coding: Diplopia
-    required: true
-    translations_key: questions.A8
-    glossary_ref: diplopia
-
-  - id: A9
-    section: A
-    type: yes_no
-    report_label: "Blind area in both eyes' field / Defect"
-    coding: Defect
-    required: true
-    translations_key: questions.A9
-    glossary_ref: visual_defect
-
-  - id: A10
-    section: A
-    type: yes_no
-    report_label: "Unsteadiness / Ataxia"
-    coding: Ataxia
-    required: true
-    translations_key: questions.A10
-    glossary_ref: ataxia
-
-  - id: A11
-    section: A
-    type: yes_no
-    report_label: "Reduced awareness or fainting / Conscience"
-    coding: Conscience
-    required: true
-    translations_key: questions.A11
-
-  - id: A12
-    section: A
-    type: yes_no
-    report_label: "Pins-and-needles on both sides / Paresthesia"
-    coding: Paresthesia
-    required: true
-    translations_key: questions.A12
-
-  - id: A13
-    section: A
-    type: yes_no
-    report_label: "Muscle weakness on one side during attack (motor aura)"
-    coding: MotorWeakness
-    required: true
-    translations_key: questions.A13
-
-  - id: A14
     section: A
     type: single_choice
     report_label: "Typical aura duration"
@@ -433,47 +288,7 @@ questions:
         label_key: options.no_aura
       - code: unknown
         label_key: options.unknown
-    translations_key: questions.A14
-
-  - id: A15
-    section: A
-    type: yes_no
-    report_label: "Warning symptoms fully go away"
-    coding: AuraFullyReversible
-    required: true
-    translations_key: questions.A15
-
-  - id: A16
-    section: A
-    type: yes_no
-    report_label: "Symptoms spread gradually over 5+ minutes"
-    coding: AuraGradualSpread
-    required: true
-    translations_key: questions.A16
-
-  - id: A17
-    section: A
-    type: yes_no
-    report_label: "Two or more warning symptoms in succession"
-    coding: AuraSuccession
-    required: true
-    translations_key: questions.A17
-
-  - id: A18
-    section: A
-    type: yes_no
-    report_label: "Warning symptoms on only one side of body/vision"
-    coding: AuraUnilateral
-    required: true
-    translations_key: questions.A18
-
-  - id: A19
-    section: A
-    type: yes_no
-    report_label: "Headache comes with or within 60 mins of warning"
-    coding: HeadacheWithin60mOfAura
-    required: true
-    translations_key: questions.A19
+    translations_key: questions.A3
 
   # ================= SECTION F: HISTORY, TRIGGERS & MEDICATIONS =================
   - id: F1
@@ -487,39 +302,23 @@ questions:
   - id: F2
     section: F
     type: free_text
-    report_label: "Other medical conditions"
-    coding: MedicalConditions
+    report_label: "Medications taken during attacks and/or for prevention"
+    coding: Medications
     required: false
     translations_key: questions.F2
 
   - id: F3
     section: F
-    type: free_text
-    report_label: "Acute medicines taken for attack"
-    coding: AcuteMedications
-    required: false
-    translations_key: questions.F3
-
-  - id: F4
-    section: F
-    type: free_text
-    report_label: "Preventive headache medicines tried/current"
-    coding: PreventiveMedications
-    required: false
-    translations_key: questions.F4
-
-  - id: F5
-    section: F
     type: yes_no
     report_label: "Pain medication taken on 10+ days/month"
     coding: MedicationOveruse10Days
     required: true
-    translations_key: questions.F5
+    translations_key: questions.F3
 
-  - id: F6
+  - id: F4
     section: F
     type: multi_choice
-    report_label: "Suspected attack triggers"
+    report_label: "Suspected attack triggers (select all that apply)"
     coding: Triggers
     required: false
     options:
@@ -545,9 +344,9 @@ questions:
         label_key: options.trigger_food
       - code: other
         label_key: options.trigger_other
-    translations_key: questions.F6
+    translations_key: questions.F4
 
-  - id: F7
+  - id: F5
     section: F
     type: yes_no
     report_label: "Headaches correlated with menstrual period"
@@ -556,17 +355,17 @@ questions:
     skip_if:
       field: P2
       equals: male
-    translations_key: questions.F7
+    translations_key: questions.F5
 
-  - id: F8
+  - id: F6
     section: F
     type: free_text
-    report_label: "Additional notes for the doctor"
+    report_label: "Other medical conditions or additional notes for the doctor"
     coding: PatientNotes
     required: false
-    translations_key: questions.F8
+    translations_key: questions.F6
 
-  # ================= SECTION L: OPTIONAL LIFESTYLE BLOCK =================
+  # ================= SECTION L: LIFESTYLE (MERGED SINGLE QUESTION) =================
   - id: L1
     section: L
     type: number
@@ -588,36 +387,3 @@ questions:
       min: 0
       max: 10
     translations_key: questions.L2
-
-  - id: L3
-    section: L
-    type: number
-    report_label: "Water intake (liters per day)"
-    coding: LifestyleWater
-    required: false
-    validation:
-      min: 0
-      max: 15
-    translations_key: questions.L3
-
-  - id: L4
-    section: L
-    type: number
-    report_label: "Caffeine intake (cups per day)"
-    coding: LifestyleCaffeine
-    required: false
-    validation:
-      min: 0
-      max: 20
-    translations_key: questions.L4
-
-  - id: L5
-    section: L
-    type: number
-    report_label: "Screen time (hours per day)"
-    coding: LifestyleScreens
-    required: false
-    validation:
-      min: 0
-      max: 24
-    translations_key: questions.L5

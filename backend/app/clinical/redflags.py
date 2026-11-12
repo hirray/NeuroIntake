@@ -5,22 +5,37 @@ Safety Principle: Neurological red flags are checked FIRST and at any moment
 a red flag answer or emergency phrase is encountered.
 On red flag: STOP interview, mark URGENT_RED_FLAG, show calm emergency guidance,
 NEVER reassure, NEVER give diagnostic labels.
+
+v2 — Updated for composite multi_choice E1/E2 questions.
+Any choice other than 'none' in E1 or E2 triggers immediate escalation.
 """
 from typing import Dict, Any, List, Tuple
 import re
 
-# Red flag question IDs in question bank
-RED_FLAG_QUESTION_IDS = ["E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8"]
+# Red flag question IDs in question bank (now composite multi-choice)
+RED_FLAG_QUESTION_IDS = ["E1", "E2"]
 
+# Per-code descriptions for each red-flag sub-option
 RED_FLAG_DESCRIPTIONS = {
-    "E1": "Thunderclap headache: peak intensity reached in under 1 minute (possible subarachnoid hemorrhage / vascular event)",
-    "E2": "Worst headache of life or first-ever severe acute headache",
-    "E3": "New focal neurological deficit (weakness, numbness, speech loss, confusion) differing from typical pattern",
-    "E4": "Syncope, seizure, or sudden drop in level of consciousness",
-    "E5": "Systemic symptoms: fever combined with neck stiffness or acute rash (possible meningitis/encephalitis)",
-    "E6": "Sudden vision loss or acute major visual field cut",
-    "E7": "Post-traumatic headache: onset following recent head injury",
-    "E8": "New onset headache after age 50 or fundamental change in headache pattern (possible temporal arteritis or intracranial pathology)",
+    # E1 codes
+    "thunderclap": "Thunderclap headache: peak intensity reached in under 1 minute (possible subarachnoid hemorrhage / vascular event)",
+    "worst_headache": "Worst headache of life or first-ever severe acute headache",
+    "neuro_deficit": "New focal neurological deficit (weakness, numbness, speech loss, confusion) differing from typical pattern",
+    "syncope_seizure": "Syncope, seizure, or sudden drop in level of consciousness",
+    # E2 codes
+    "fever_neck": "Systemic symptoms: fever combined with neck stiffness or acute rash (possible meningitis/encephalitis)",
+    "vision_loss": "Sudden vision loss or acute major visual field cut",
+    "post_trauma": "Post-traumatic headache: onset following recent head injury",
+    "late_onset": "New onset headache after age 50 or fundamental change in headache pattern (possible temporal arteritis or intracranial pathology)",
+    # Legacy single-question codes kept for backward compat
+    "E1": "Thunderclap headache: peak intensity reached in under 1 minute",
+    "E2": "Worst headache of life or first-ever severe headache",
+    "E3": "New focal neurological deficit",
+    "E4": "Syncope, seizure, or sudden drop in alertness",
+    "E5": "Fever with neck stiffness or rash",
+    "E6": "Sudden vision loss or acute visual change",
+    "E7": "Post-traumatic headache",
+    "E8": "New onset headache after age 50 or pattern change",
 }
 
 # Real-time spontaneous escalation keywords / phrases across EN, HI, GU
@@ -49,44 +64,56 @@ def check_immediate_escalation(text: str) -> Tuple[bool, str]:
             return True, "Spontaneous statement describing severe acute distress or sudden neurological deficit"
     return False, ""
 
+def _get_answer_value(val: Any):
+    """Normalises an answer value to a comparable form."""
+    if isinstance(val, dict):
+        return val.get("value")
+    return val
+
 def evaluate_red_flags(answers: Dict[str, Any]) -> Tuple[bool, List[str], List[str]]:
     """
     Evaluates current answers for red flags.
+    Supports both the new composite multi_choice E1/E2 and legacy individual E1-E8 questions.
     Returns:
         (is_urgent: bool, triggered_codes: List[str], triggered_reasons: List[str])
     """
     triggered_codes: List[str] = []
     triggered_reasons: List[str] = []
 
-    # Check E1-E8 explicitly
-    for qid in RED_FLAG_QUESTION_IDS:
-        val = answers.get(qid)
-        # val can be string 'yes', dict {'value': 'yes'}, or boolean True
-        answer_val = ""
-        if isinstance(val, dict):
-            answer_val = str(val.get("value", "")).lower()
-        elif val is not None:
-            answer_val = str(val).lower()
+    # --- New composite question handling (E1, E2 as multi_choice) ---
+    for qid in ["E1", "E2"]:
+        val = _get_answer_value(answers.get(qid))
+        if val is None:
+            continue
+        # val is either a list (multi_choice) or a scalar
+        selected = val if isinstance(val, list) else [str(val)]
+        for code in selected:
+            code_str = str(code).lower().strip()
+            if code_str in ("none", "none_of_the_above", ""):
+                continue
+            # Any non-none selection is a red flag
+            desc = RED_FLAG_DESCRIPTIONS.get(code_str, f"Red flag reported: {code_str}")
+            triggered_codes.append(f"{qid}:{code_str}")
+            triggered_reasons.append(f"[{qid}] {desc}")
 
+    # --- Legacy individual question handling (E3-E8) for backward compatibility ---
+    for qid in ["E3", "E4", "E5", "E6", "E7", "E8"]:
+        val = _get_answer_value(answers.get(qid))
+        if val is None:
+            continue
+        answer_val = str(val).lower()
         if answer_val in ["yes", "true", "1"]:
             triggered_codes.append(qid)
             desc = RED_FLAG_DESCRIPTIONS.get(qid, f"Positive red flag answer to {qid}")
             triggered_reasons.append(f"[{qid}] {desc}")
 
-    # Also check if motor weakness (A13) is marked yes without being a known long-standing aura
-    a13_val = answers.get("A13")
-    if isinstance(a13_val, dict):
-        a13_str = str(a13_val.get("value", "")).lower()
-    else:
-        a13_str = str(a13_val).lower() if a13_val is not None else ""
+    # Also flag if A2 contains muscle_weakness_one_side (new consolidated aura question)
+    a2_val = _get_answer_value(answers.get("A2"))
+    if a2_val is not None:
+        a2_list = a2_val if isinstance(a2_val, list) else [str(a2_val)]
+        if "muscle_weakness_one_side" in [str(x).lower() for x in a2_list]:
+            triggered_codes.append("A2:muscle_weakness_one_side")
+            triggered_reasons.append("[A2] Reported unilateral motor weakness during attack — requires specialist evaluation")
 
-    # If new motor weakness occurred or syncope/seizure
-    a11_val = answers.get("A11")
-    if isinstance(a11_val, dict):
-        a11_str = str(a11_val.get("value", "")).lower()
-    else:
-        a11_str = str(a11_val).lower() if a11_val is not None else ""
-
-    # Note: A13 alone is also flagged in specialist review, but if marked in conjunction with E3, it's captured.
     is_urgent = len(triggered_codes) > 0
     return is_urgent, triggered_codes, triggered_reasons
